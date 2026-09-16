@@ -219,7 +219,7 @@ export default function MyTeamPage() {
       )}
 
       {/* Tabs navigation */}
-      <div className="flex items-center gap-2 border-b border-navy-700/80 pb-3">
+      <div className="flex items-center gap-2 border-b border-navy-700/80 pb-3 overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveTab('roster')}
           className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all cursor-pointer ${

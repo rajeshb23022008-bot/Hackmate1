@@ -92,10 +92,10 @@ export default function AppLayout() {
     { name: 'Dashboard', path: '/app', icon: Home, mobile: true },
     { name: 'Teammates', path: '/app/teammates', icon: Search, mobile: true },
     { name: 'Teams', path: '/app/teams', icon: Users, mobile: true },
-    { name: 'My Team', path: '/app/my-team', icon: Trophy, mobile: false },
+    { name: 'My Team', path: '/app/my-team', icon: Trophy, mobile: true },
     { name: 'Messages', path: '/app/messages', icon: MessageSquare, mobile: true, badge: unreadMessagesCount },
     { name: 'Notifications', path: '/app/notifications', icon: Bell, mobile: true, badge: unreadCount },
-    { name: 'Profile', path: '/app/profile', icon: User, mobile: false },
+    { name: 'Profile', path: '/app/profile', icon: User, mobile: true },
   ];
 
   const handleLogout = async () => {
@@ -252,7 +252,7 @@ export default function AppLayout() {
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-navy-800/95 backdrop-blur-lg border-t border-navy-700 flex items-center justify-around px-2 py-1 pb-[env(safe-area-inset-bottom,16px)] z-50 shadow-2xl">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-navy-800/95 backdrop-blur-lg border-t border-navy-700/80 flex items-center justify-between px-1 py-1 pb-[env(safe-area-inset-bottom,16px)] z-50 shadow-2xl overflow-x-auto no-scrollbar">
         {navItems
           .filter((item) => item.mobile)
           .map((item) => {
@@ -265,17 +265,19 @@ export default function AppLayout() {
                 key={item.name}
                 to={item.path}
                 className={clsx(
-                  'flex flex-col items-center justify-center gap-1 p-2 min-w-[56px] min-h-[48px] rounded-lg transition-colors relative',
-                  isActive ? 'text-blue-accent' : 'text-slate-400 hover:text-slate-200'
+                  'flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 min-w-[50px] sm:min-w-[60px] min-h-[48px] rounded-xl transition-all relative shrink-0',
+                  isActive ? 'text-blue-accent font-bold bg-blue-accent/10' : 'text-slate-400 hover:text-slate-200'
                 )}
               >
                 <div className="relative">
-                  <Icon className="w-[22px] h-[22px]" />
+                  <Icon className="w-5 h-5" />
                   {item.badge !== undefined && item.badge > 0 && (
-                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-blue-accent border border-navy-900" />
+                    <span className="absolute -top-1 -right-1.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-blue-accent text-navy-950 text-[9px] font-extrabold flex items-center justify-center border border-navy-900">
+                      {item.badge}
+                    </span>
                   )}
                 </div>
-                <span className="text-[10px] font-medium truncate w-full text-center">
+                <span className="text-[9px] font-medium tracking-tight truncate w-full text-center">
                   {item.name}
                 </span>
               </Link>
