@@ -19,48 +19,18 @@ import { Link } from 'react-router-dom';
 import {
   subscribeUserTeams,
   subscribeToNotifications,
+  getTeammates,
   type Team,
   type AppNotification,
 } from '../../services/firestoreService';
 import CreateTeamModal from '../../components/team/CreateTeamModal';
-
-const mockTeammates = [
-  {
-    id: '1',
-    name: 'Aarav Patel',
-    role: 'Computer Vision & PyTorch',
-    college: 'IIT Bombay',
-    skills: ['PyTorch', 'YOLOv8', 'FastAPI', 'OpenCV'],
-    matchScore: 97,
-    status: 'Seeking Team',
-    tag: 'Fills your ML gap',
-  },
-  {
-    id: '2',
-    name: 'Simran Kaur',
-    role: 'Full-Stack & Cloud',
-    college: 'IIIT Delhi',
-    skills: ['Next.js', 'PostgreSQL', 'Docker', 'AWS'],
-    matchScore: 94,
-    status: 'Team Leader',
-    tag: 'SIH Healthcare Track',
-  },
-  {
-    id: '3',
-    name: 'Devansh Roy',
-    role: 'Product & UX Designer',
-    college: 'NID Bengaluru',
-    skills: ['Figma', 'UI Systems', 'Motion', 'Prototyping'],
-    matchScore: 91,
-    status: 'Solo Hacker',
-    tag: 'Portfolio Verified',
-  },
-];
+import type { UserProfile } from '../../context/AuthContext';
 
 export default function DashboardPage() {
   const { userProfile, currentUser } = useAuth();
   const [teams, setTeams] = useState<Team[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [recommendedTeammates, setRecommendedTeammates] = useState<UserProfile[]>([]);
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
   useEffect(() => {
@@ -71,6 +41,12 @@ export default function DashboardPage() {
     const unsubNotifs = subscribeToNotifications(currentUser.uid, (data) => {
       setNotifications(data);
     });
+
+    getTeammates().then((allUsers) => {
+      const candidates = allUsers.filter((u) => u.uid !== currentUser.uid);
+      setRecommendedTeammates(candidates);
+    });
+
     return () => {
       unsubTeams();
       unsubNotifs();
@@ -175,55 +151,57 @@ export default function DashboardPage() {
       </div>
 
       {/* Swipe Carousel for Recommended Teammates */}
-      <div className="pt-2">
-        <SwipeCarousel
-          title="Recommended For Your Hackathon Track"
-          subtitle="Hand-picked candidates based on SIH problem statement criteria."
-        >
-          {mockTeammates.map((mate) => (
-            <div key={mate.id} className="min-w-[300px] md:min-w-[320px] max-w-[340px] shrink-0">
-              <MotionCard className="p-5 h-full flex flex-col justify-between border-navy-700/80 hover:border-blue-accent/40 shadow-md bg-navy-800/90">
-                <div>
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="font-bold text-white text-base">{mate.name}</h3>
-                      <p className="text-xs text-blue-accent font-medium">{mate.role}</p>
-                      <p className="text-[11px] text-slate-400">{mate.college}</p>
-                    </div>
-                    <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
-                      {mate.matchScore}%
-                    </span>
-                  </div>
-
-                  <div className="inline-block px-2.5 py-1 rounded bg-navy-900 text-xs text-slate-300 border border-navy-700/80 mb-3">
-                    ⚡ {mate.tag}
-                  </div>
-
-                  <div className="flex flex-wrap gap-1.5 mb-4">
-                    {mate.skills.map((skill, i) => (
-                      <span
-                        key={i}
-                        className="px-2 py-0.5 rounded bg-navy-700 text-slate-300 text-[10px] font-medium"
-                      >
-                        {skill}
+      {recommendedTeammates.length > 0 && (
+        <div className="pt-2">
+          <SwipeCarousel
+            title="Recommended For Your Hackathon Track"
+            subtitle="Hand-picked verified candidates looking to build teams."
+          >
+            {recommendedTeammates.map((mate) => (
+              <div key={mate.uid} className="min-w-[300px] md:min-w-[320px] max-w-[340px] shrink-0">
+                <MotionCard className="p-5 h-full flex flex-col justify-between border-navy-700/80 hover:border-blue-accent/40 shadow-md bg-navy-800/90">
+                  <div>
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h3 className="font-bold text-white text-base">{mate.displayName || 'Hacker'}</h3>
+                        <p className="text-xs text-blue-accent font-medium">{mate.role || 'Developer'}</p>
+                        <p className="text-[11px] text-slate-400">{mate.college || 'Collegiate'}</p>
+                      </div>
+                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                        95% Match
                       </span>
-                    ))}
-                  </div>
-                </div>
+                    </div>
 
-                <div className="pt-3 border-t border-navy-700/60 flex items-center justify-between">
-                  <span className="text-xs text-slate-400">{mate.status}</span>
-                  <Link to="/app/teammates">
-                    <MotionButton size="sm" variant="outline" className="text-xs py-1 px-2.5">
-                      Connect
-                    </MotionButton>
-                  </Link>
-                </div>
-              </MotionCard>
-            </div>
-          ))}
-        </SwipeCarousel>
-      </div>
+                    <div className="inline-block px-2.5 py-1 rounded bg-navy-900 text-xs text-slate-300 border border-navy-700/80 mb-3">
+                      ⚡ {mate.department || 'Active Hacker'}
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5 mb-4">
+                      {mate.skills?.map((skill, i) => (
+                        <span
+                          key={i}
+                          className="px-2 py-0.5 rounded bg-navy-700 text-slate-300 text-[10px] font-medium"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-navy-700/60 flex items-center justify-between">
+                    <span className="text-xs text-slate-400">Seeking Team</span>
+                    <Link to="/app/teammates">
+                      <MotionButton size="sm" variant="outline" className="text-xs py-1 px-2.5">
+                        Connect
+                      </MotionButton>
+                    </Link>
+                  </div>
+                </MotionCard>
+              </div>
+            ))}
+          </SwipeCarousel>
+        </div>
+      )}
 
       {/* Live Notifications & Invites */}
       <div className="pt-2">
