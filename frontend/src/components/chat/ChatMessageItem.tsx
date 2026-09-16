@@ -64,13 +64,18 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({ message, isSel
 
         {/* Message Body */}
         <div
-          className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words ${
+          className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words flex flex-col ${
             isSelf
               ? 'bg-blue-600 text-white rounded-tr-none shadow-md'
               : 'bg-navy-800 border border-navy-700/80 text-slate-200 rounded-tl-none shadow-sm'
           }`}
         >
-          {renderFormattedText(message.text || '')}
+          <div>{renderFormattedText(message.text || '')}</div>
+          <div className={`flex items-center gap-1 text-[10px] font-semibold mt-1 self-end select-none ${
+            isSelf ? 'text-blue-200/90' : 'text-slate-400/90'
+          }`}>
+            <span>{formatTimestamp(message.createdAt)}</span>
+          </div>
         </div>
       </div>
     </div>

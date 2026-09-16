@@ -598,6 +598,8 @@ export interface Conversation {
   lastMessage?: {
     text: string;
     senderId: string;
+    senderName?: string;
+    read?: boolean;
     type?: 'text' | 'voice' | 'file';
     timestamp?: any;
   };
@@ -733,9 +735,10 @@ export const sendChatMessage = async (
       if (convSnap.exists()) {
         await updateDoc(convRef, {
           lastMessage: {
-            text: messageData.type === 'voice' ? '🎤 Voice message' : messageData.text,
+            text: messageData.text,
             senderId: messageData.senderId,
-            type: messageData.type || 'text',
+            senderName: messageData.senderName,
+            read: false,
             timestamp: new Date().toISOString(),
           },
           updatedAt: serverTimestamp(),
@@ -747,6 +750,27 @@ export const sendChatMessage = async (
   }
 
   return docRef.id;
+};
+
+/**
+ * Mark a DM conversation's last message as read for the current user
+ */
+export const markConversationAsRead = async (convId: string, currentUserId: string) => {
+  if (!convId || !convId.includes('_')) return;
+  try {
+    const convRef = doc(db, 'conversations', convId);
+    const snap = await getDoc(convRef);
+    if (snap.exists()) {
+      const data = snap.data();
+      if (data.lastMessage && data.lastMessage.senderId !== currentUserId && !data.lastMessage.read) {
+        await updateDoc(convRef, {
+          'lastMessage.read': true,
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('Error marking conversation as read:', err);
+  }
 };
 
 /**

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home,
   Search,
@@ -12,10 +12,16 @@ import {
   LogOut,
   Sparkles,
   Plus,
+  X,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '../context/AuthContext';
-import { subscribeToNotifications, type AppNotification } from '../services/firestoreService';
+import {
+  subscribeToNotifications,
+  subscribeUserConversations,
+  type AppNotification,
+  type Conversation,
+} from '../services/firestoreService';
 import CreateTeamModal from '../components/team/CreateTeamModal';
 
 export default function AppLayout() {
@@ -23,7 +29,16 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const { userProfile, currentUser, logout } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const [activeToast, setActiveToast] = useState<{
+    id: string;
+    chatId: string;
+    senderName: string;
+    text: string;
+  } | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+
+  const knownMessageTimestampsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!currentUser) return;
@@ -34,12 +49,51 @@ export default function AppLayout() {
     return () => unsubscribe();
   }, [currentUser]);
 
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const unsubscribeConvs = subscribeUserConversations(currentUser.uid, (convs: Conversation[]) => {
+      let unreadMsgs = 0;
+      convs.forEach((conv) => {
+        if (
+          conv.lastMessage &&
+          conv.lastMessage.senderId !== currentUser.uid &&
+          !conv.lastMessage.read
+        ) {
+          unreadMsgs += 1;
+
+          const msgKey = `${conv.id}_${conv.lastMessage.timestamp}`;
+          if (!knownMessageTimestampsRef.current.has(msgKey)) {
+            knownMessageTimestampsRef.current.add(msgKey);
+
+            const otherUid = conv.participants.find((p) => p !== currentUser.uid);
+            const senderName =
+              (otherUid && conv.participantData?.[otherUid]?.displayName) ||
+              conv.lastMessage.senderName ||
+              'Hacker';
+
+            setActiveToast({
+              id: msgKey,
+              chatId: conv.id,
+              senderName,
+              text: conv.lastMessage.text || 'Sent you a message',
+            });
+          }
+        }
+      });
+
+      setUnreadMessagesCount(unreadMsgs);
+    });
+
+    return () => unsubscribeConvs();
+  }, [currentUser]);
+
   const navItems = [
     { name: 'Dashboard', path: '/app', icon: Home, mobile: true },
     { name: 'Teammates', path: '/app/teammates', icon: Search, mobile: true },
     { name: 'Teams', path: '/app/teams', icon: Users, mobile: true },
     { name: 'My Team', path: '/app/my-team', icon: Trophy, mobile: false },
-    { name: 'Messages', path: '/app/messages', icon: MessageSquare, mobile: true },
+    { name: 'Messages', path: '/app/messages', icon: MessageSquare, mobile: true, badge: unreadMessagesCount },
     { name: 'Notifications', path: '/app/notifications', icon: Bell, mobile: true, badge: unreadCount },
     { name: 'Profile', path: '/app/profile', icon: User, mobile: false },
   ];
@@ -235,6 +289,46 @@ export default function AppLayout() {
         onClose={() => setCreateModalOpen(false)}
         onSuccess={() => navigate('/app/my-team')}
       />
+
+      {/* Real-Time Message Pop-Up Toast Notification */}
+      <AnimatePresence>
+        {activeToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="fixed top-5 right-5 z-50 max-w-sm w-full bg-navy-800/95 border border-blue-accent/50 p-4 rounded-2xl shadow-2xl backdrop-blur-md flex items-start gap-3 text-white"
+          >
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-accent to-blue-600 flex items-center justify-center text-navy-900 font-bold text-sm shrink-0 shadow-sm">
+              {activeToast.senderName.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-extrabold text-blue-accent truncate">
+                  New Message from {activeToast.senderName}
+                </h4>
+                <span className="text-[10px] text-slate-400">Just now</span>
+              </div>
+              <p className="text-xs text-slate-200 mt-0.5 line-clamp-2">{activeToast.text}</p>
+              <button
+                onClick={() => {
+                  navigate(`/app/messages?chatId=${activeToast.chatId}`);
+                  setActiveToast(null);
+                }}
+                className="mt-2 text-xs font-bold text-blue-accent hover:underline cursor-pointer flex items-center gap-1"
+              >
+                Open Chat &rarr;
+              </button>
+            </div>
+            <button
+              onClick={() => setActiveToast(null)}
+              className="text-slate-400 hover:text-white p-1 rounded-lg cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

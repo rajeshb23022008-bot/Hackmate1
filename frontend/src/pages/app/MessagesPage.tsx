@@ -8,6 +8,7 @@ import {
   subscribeUserTeams,
   subscribeChatMessages,
   sendChatMessage,
+  markConversationAsRead,
   getOrCreateConversation,
   getTeammates,
   type Conversation,
@@ -125,12 +126,19 @@ export default function MessagesPage() {
       return;
     }
 
+    if (currentUser?.uid && selectedChatId.includes('_')) {
+      markConversationAsRead(selectedChatId, currentUser.uid);
+    }
+
     const unsubMessages = subscribeChatMessages(selectedChatId, (data) => {
       setMessages(data);
+      if (currentUser?.uid && selectedChatId.includes('_')) {
+        markConversationAsRead(selectedChatId, currentUser.uid);
+      }
     });
 
     return () => unsubMessages();
-  }, [selectedChatId]);
+  }, [selectedChatId, currentUser]);
 
   // Handle sending a text message
   const handleSendText = async (e?: React.FormEvent) => {
