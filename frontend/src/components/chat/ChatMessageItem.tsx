@@ -1,6 +1,5 @@
 import React from 'react';
 import type { ChatMessage } from '../../services/firestoreService';
-import { AudioPlayer } from './AudioPlayer';
 
 interface ChatMessageItemProps {
   message: ChatMessage;
@@ -64,19 +63,15 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({ message, isSel
         </div>
 
         {/* Message Body */}
-        {message.type === 'voice' && message.audioUrl ? (
-          <AudioPlayer src={message.audioUrl} duration={message.audioDuration} isSelf={isSelf} />
-        ) : (
-          <div
-            className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words ${
-              isSelf
-                ? 'bg-blue-600 text-white rounded-tr-none shadow-md'
-                : 'bg-navy-800 border border-navy-700/80 text-slate-200 rounded-tl-none shadow-sm'
-            }`}
-          >
-            {renderFormattedText(message.text || '')}
-          </div>
-        )}
+        <div
+          className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words ${
+            isSelf
+              ? 'bg-blue-600 text-white rounded-tr-none shadow-md'
+              : 'bg-navy-800 border border-navy-700/80 text-slate-200 rounded-tl-none shadow-sm'
+          }`}
+        >
+          {renderFormattedText(message.text || '')}
+        </div>
       </div>
     </div>
   );

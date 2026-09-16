@@ -8,7 +8,6 @@ import {
   subscribeUserTeams,
   subscribeChatMessages,
   sendChatMessage,
-  uploadVoiceRecording,
   getOrCreateConversation,
   getTeammates,
   type Conversation,
@@ -16,7 +15,6 @@ import {
   type ChatMessage,
 } from '../../services/firestoreService';
 import { ChatMessageItem } from '../../components/chat/ChatMessageItem';
-import { VoiceRecorder } from '../../components/chat/VoiceRecorder';
 import { TeamMemberListModal } from '../../components/chat/TeamMemberListModal';
 import {
   MessageSquare,
@@ -153,29 +151,6 @@ export default function MessagesPage() {
       });
     } catch (err) {
       console.error('Error sending text message:', err);
-    } finally {
-      setIsSending(false);
-    }
-  };
-
-  // Handle recorded voice note sending
-  const handleRecordComplete = async (audioBlob: Blob, duration: number) => {
-    if (!selectedChatId || !currentUser) return;
-    setIsSending(true);
-
-    try {
-      const audioUrl = await uploadVoiceRecording(audioBlob, selectedChatId);
-      await sendChatMessage({
-        chatId: selectedChatId,
-        senderId: currentUser.uid,
-        senderName: userProfile?.displayName || currentUser.displayName || 'Hacker',
-        text: '🎤 Voice message',
-        type: 'voice',
-        audioUrl,
-        audioDuration: duration,
-      });
-    } catch (err) {
-      console.error('Error sending voice recording:', err);
     } finally {
       setIsSending(false);
     }
@@ -460,15 +435,12 @@ export default function MessagesPage() {
                 <form onSubmit={handleSendText} className="flex items-center gap-2">
                   <input
                     type="text"
-                    placeholder="Type a message or hold mic to record..."
+                    placeholder="Type a message..."
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     disabled={isSending}
                     className="flex-1 bg-navy-900 border border-navy-700 rounded-xl py-2.5 px-4 text-white text-base md:text-sm focus:outline-none focus:border-blue-accent transition-all placeholder:text-slate-500"
                   />
-
-                  {/* Voice Recorder Button */}
-                  <VoiceRecorder onRecordComplete={handleRecordComplete} disabled={isSending} />
 
                   {/* Send Button */}
                   <button
