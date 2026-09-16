@@ -97,7 +97,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@college.edu"
-                  className="w-full bg-navy-900 border border-navy-700 rounded-lg py-2.5 pl-10 pr-3 text-white text-sm focus:outline-none focus:border-blue-accent focus:ring-1 focus:ring-blue-accent transition-all placeholder:text-slate-500"
+                  className="w-full bg-navy-900 border border-navy-700 rounded-lg py-3 pl-10 pr-4 text-white text-base md:text-sm focus:outline-none focus:border-blue-accent focus:ring-1 focus:ring-blue-accent transition-all placeholder:text-slate-500"
                   required
                 />
               </div>
@@ -114,7 +114,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-navy-900 border border-navy-700 rounded-lg py-2.5 pl-10 pr-10 text-white text-sm focus:outline-none focus:border-blue-accent focus:ring-1 focus:ring-blue-accent transition-all placeholder:text-slate-500"
+                  className="w-full bg-navy-900 border border-navy-700 rounded-lg py-3 pl-10 pr-10 text-white text-base md:text-sm focus:outline-none focus:border-blue-accent focus:ring-1 focus:ring-blue-accent transition-all placeholder:text-slate-500"
                   required
                 />
                 <button
@@ -150,8 +150,7 @@ export default function LoginPage() {
             disabled={loading}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            transition={{ duration: 0.18 }}
-            className="w-full bg-navy-900 border border-navy-700 text-white font-medium py-2.5 px-4 rounded-lg hover:border-slate-500 transition-all flex items-center justify-center gap-2.5 text-sm cursor-pointer shadow-sm"
+            className="w-full bg-navy-900 border border-navy-700 text-white font-medium py-3 px-4 rounded-lg hover:border-slate-500 transition-all flex items-center justify-center gap-2.5 text-sm cursor-pointer shadow-sm"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path

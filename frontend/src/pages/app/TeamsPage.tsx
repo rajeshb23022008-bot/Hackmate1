@@ -112,7 +112,7 @@ export default function TeamsPage() {
               placeholder="Search team name, problem statement, roles..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-navy-900 border border-navy-700 rounded-xl py-2 pl-10 pr-4 text-white text-xs focus:outline-none focus:border-blue-accent transition-all placeholder:text-slate-500"
+              className="w-full bg-navy-900 border border-navy-700 rounded-xl py-3 pl-10 pr-4 text-white text-base md:text-sm focus:outline-none focus:border-blue-accent transition-all placeholder:text-slate-500"
             />
           </div>
 
@@ -123,7 +123,7 @@ export default function TeamsPage() {
               placeholder="Filter by College / Inst..."
               value={collegeFilter}
               onChange={(e) => setCollegeFilter(e.target.value)}
-              className="w-full bg-navy-900 border border-navy-700 rounded-xl py-2 px-3 text-white text-xs focus:outline-none focus:border-blue-accent transition-all placeholder:text-slate-500"
+              className="w-full bg-navy-900 border border-navy-700 rounded-xl py-3 px-4 text-white text-base md:text-sm focus:outline-none focus:border-blue-accent transition-all placeholder:text-slate-500"
             />
           </div>
 
@@ -134,7 +134,7 @@ export default function TeamsPage() {
               placeholder="Filter by Skill (e.g. React)..."
               value={skillFilter}
               onChange={(e) => setSkillFilter(e.target.value)}
-              className="w-full bg-navy-900 border border-navy-700 rounded-xl py-2 px-3 text-white text-xs focus:outline-none focus:border-blue-accent transition-all placeholder:text-slate-500"
+              className="w-full bg-navy-900 border border-navy-700 rounded-xl py-3 px-4 text-white text-base md:text-sm focus:outline-none focus:border-blue-accent transition-all placeholder:text-slate-500"
             />
           </div>
         </div>

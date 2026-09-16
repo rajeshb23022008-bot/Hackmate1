@@ -138,7 +138,7 @@ export default function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTe
                 placeholder="e.g. ByteBrigade, Team Apex, NeuralSync"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full bg-navy-800 border border-navy-700 rounded-xl py-2.5 px-3.5 text-white text-sm focus:outline-none focus:border-blue-accent focus:ring-1 focus:ring-blue-accent transition-all placeholder:text-slate-500"
+                className="w-full bg-navy-800 border border-navy-700 rounded-xl py-3 px-4 text-white text-base md:text-sm focus:outline-none focus:border-blue-accent focus:ring-1 focus:ring-blue-accent transition-all placeholder:text-slate-500"
               />
             </div>
 
@@ -153,7 +153,7 @@ export default function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTe
                   <select
                     value={formData.hackathon}
                     onChange={(e) => setFormData({ ...formData, hackathon: e.target.value })}
-                    className="w-full bg-navy-800 border border-navy-700 rounded-xl py-2.5 pl-10 pr-3.5 text-white text-sm focus:outline-none focus:border-blue-accent focus:ring-1 focus:ring-blue-accent transition-all cursor-pointer"
+                    className="w-full bg-navy-800 border border-navy-700 rounded-xl py-3 pl-10 pr-4 text-white text-base md:text-sm focus:outline-none focus:border-blue-accent focus:ring-1 focus:ring-blue-accent transition-all cursor-pointer"
                   >
                     {HACKATHON_OPTIONS.map((h) => (
                       <option key={h} value={h} className="bg-navy-900 text-white">
@@ -175,7 +175,7 @@ export default function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTe
                     placeholder="e.g. IIT Bombay, BITS Pilani"
                     value={formData.college}
                     onChange={(e) => setFormData({ ...formData, college: e.target.value })}
-                    className="w-full bg-navy-800 border border-navy-700 rounded-xl py-2.5 pl-10 pr-3.5 text-white text-sm focus:outline-none focus:border-blue-accent focus:ring-1 focus:ring-blue-accent transition-all placeholder:text-slate-500"
+                    className="w-full bg-navy-800 border border-navy-700 rounded-xl py-3 pl-10 pr-4 text-white text-base md:text-sm focus:outline-none focus:border-blue-accent focus:ring-1 focus:ring-blue-accent transition-all placeholder:text-slate-500"
                   />
                 </div>
               </div>
@@ -189,10 +189,10 @@ export default function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTe
               <input
                 type="text"
                 required
-                placeholder="e.g. SIH 1420: AI Driven Autonomous Crop Disease Detection"
+                placeholder="Brief title or problem statement ID"
                 value={formData.problemStatement}
                 onChange={(e) => setFormData({ ...formData, problemStatement: e.target.value })}
-                className="w-full bg-navy-800 border border-navy-700 rounded-xl py-2.5 px-3.5 text-white text-sm focus:outline-none focus:border-blue-accent focus:ring-1 focus:ring-blue-accent transition-all placeholder:text-slate-500"
+                className="w-full bg-navy-800 border border-navy-700 rounded-xl py-3 px-4 text-white text-base md:text-sm focus:outline-none focus:border-blue-accent focus:ring-1 focus:ring-blue-accent transition-all placeholder:text-slate-500"
               />
             </div>
 

@@ -108,7 +108,7 @@ export default function ApplyTeamModal({ isOpen, team, onClose, onSuccess }: App
                 <select
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
-                  className="w-full bg-navy-800 border border-navy-700 rounded-xl py-2.5 px-3.5 text-white text-sm focus:outline-none focus:border-blue-accent focus:ring-1 focus:ring-blue-accent transition-all cursor-pointer"
+                  className="w-full bg-navy-800 border border-navy-700 rounded-xl py-3 px-4 text-white text-base md:text-sm focus:outline-none focus:border-blue-accent focus:ring-1 focus:ring-blue-accent transition-all cursor-pointer"
                 >
                   {team.missingRoles?.length ? (
                     team.missingRoles.map((r) => (
@@ -132,7 +132,7 @@ export default function ApplyTeamModal({ isOpen, team, onClose, onSuccess }: App
                   placeholder="Introduce yourself, your key skills, and why you are a great fit for this team..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="w-full bg-navy-800 border border-navy-700 rounded-xl py-2.5 px-3.5 text-white text-sm focus:outline-none focus:border-blue-accent focus:ring-1 focus:ring-blue-accent transition-all placeholder:text-slate-500 resize-none"
+                  className="w-full bg-navy-800 border border-navy-700 rounded-xl py-3 px-4 text-white text-base md:text-sm focus:outline-none focus:border-blue-accent focus:ring-1 focus:ring-blue-accent transition-all placeholder:text-slate-500 resize-none"
                 />
               </div>
 

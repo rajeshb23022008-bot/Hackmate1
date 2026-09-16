@@ -190,13 +190,13 @@ export default function AppLayout() {
         </header>
 
         {/* Dynamic Route Content */}
-        <div className="flex-1 p-4 md:p-8 pb-20 md:pb-8">
+        <div className="flex-1 p-4 md:p-8 pb-24 md:pb-8">
           <Outlet />
         </div>
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-navy-800/95 backdrop-blur-lg border-t border-navy-700 flex items-center justify-around p-2 pb-[env(safe-area-inset-bottom,8px)] z-50 shadow-2xl">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-navy-800/95 backdrop-blur-lg border-t border-navy-700 flex items-center justify-around px-2 py-1 pb-[env(safe-area-inset-bottom,16px)] z-50 shadow-2xl">
         {navItems
           .filter((item) => item.mobile)
           .map((item) => {
@@ -209,14 +209,14 @@ export default function AppLayout() {
                 key={item.name}
                 to={item.path}
                 className={clsx(
-                  'flex flex-col items-center gap-1 p-1.5 min-w-[56px] rounded-lg transition-colors relative',
+                  'flex flex-col items-center justify-center gap-1 p-2 min-w-[56px] min-h-[48px] rounded-lg transition-colors relative',
                   isActive ? 'text-blue-accent' : 'text-slate-400 hover:text-slate-200'
                 )}
               >
                 <div className="relative">
-                  <Icon className="w-5 h-5" />
+                  <Icon className="w-[22px] h-[22px]" />
                   {item.badge !== undefined && item.badge > 0 && (
-                    <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-accent" />
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-blue-accent border border-navy-900" />
                   )}
                 </div>
                 <span className="text-[10px] font-medium truncate w-full text-center">

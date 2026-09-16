@@ -14,8 +14,9 @@ const InteractiveConstellation = () => {
   const { pointer } = useThree();
 
   // Particle & Network configuration
-  const nodeCount = 55; // Tuned for 60fps across low/mid-tier GPUs
-  const connectionDistance = 3.2;
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const nodeCount = isMobile ? 30 : 55; // Reduced for mobile
+  const connectionDistance = isMobile ? 2.5 : 3.2;
 
   // Pre-generate stable positions
   const { nodePositions, lineGeometry } = useMemo(() => {
@@ -57,7 +58,7 @@ const InteractiveConstellation = () => {
     lineGeom.setIndex(lineIndices);
 
     return { nodePositions: pos, lineGeometry: lineGeom };
-  }, []);
+  }, [nodeCount, connectionDistance]);
 
   // Frame loop for 60fps smooth rotation and mouse-follow parallax
   useFrame((state, delta) => {
@@ -206,13 +207,13 @@ export default function Hero3D() {
             transition={{ duration: 0.5, delay: 0.3, ease: 'easeOut' }}
             className="flex flex-col sm:flex-row gap-4 mt-8 w-full sm:w-auto will-change-transform"
           >
-            <a href="/signup">
+            <a href="/signup" className="w-full sm:w-auto block">
               <MotionButton size="lg" className="w-full sm:w-auto gap-2 group shadow-lg">
                 <span>Get Matched Now</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </MotionButton>
             </a>
-            <a href="/login">
+            <a href="/login" className="w-full sm:w-auto block">
               <MotionButton size="lg" variant="secondary" className="w-full sm:w-auto">
                 Sign In
               </MotionButton>

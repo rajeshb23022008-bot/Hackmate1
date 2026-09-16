@@ -101,7 +101,7 @@ export default function TeammatesPage() {
               placeholder="Search skill, name, role..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-navy-900 border border-navy-700 rounded-xl py-2 pl-10 pr-3 text-white text-xs focus:outline-none focus:border-blue-accent transition-all placeholder:text-slate-500"
+              className="w-full bg-navy-900 border border-navy-700 rounded-xl py-3 pl-10 pr-4 text-white text-base md:text-sm focus:outline-none focus:border-blue-accent transition-all placeholder:text-slate-500"
             />
           </div>
 
@@ -112,7 +112,7 @@ export default function TeammatesPage() {
               placeholder="College / Inst..."
               value={collegeFilter}
               onChange={(e) => setCollegeFilter(e.target.value)}
-              className="w-full bg-navy-900 border border-navy-700 rounded-xl py-2 px-3 text-white text-xs focus:outline-none focus:border-blue-accent transition-all placeholder:text-slate-500"
+              className="w-full bg-navy-900 border border-navy-700 rounded-xl py-3 px-4 text-white text-base md:text-sm focus:outline-none focus:border-blue-accent transition-all placeholder:text-slate-500"
             />
           </div>
 
@@ -123,7 +123,7 @@ export default function TeammatesPage() {
               placeholder="Department (e.g. CSE, ECE)..."
               value={deptFilter}
               onChange={(e) => setDeptFilter(e.target.value)}
-              className="w-full bg-navy-900 border border-navy-700 rounded-xl py-2 px-3 text-white text-xs focus:outline-none focus:border-blue-accent transition-all placeholder:text-slate-500"
+              className="w-full bg-navy-900 border border-navy-700 rounded-xl py-3 px-4 text-white text-base md:text-sm focus:outline-none focus:border-blue-accent transition-all placeholder:text-slate-500"
             />
           </div>
 
@@ -132,7 +132,7 @@ export default function TeammatesPage() {
             <select
               value={yearFilter}
               onChange={(e) => setYearFilter(e.target.value)}
-              className="w-full bg-navy-900 border border-navy-700 rounded-xl py-2 px-3 text-white text-xs focus:outline-none focus:border-blue-accent cursor-pointer"
+              className="w-full bg-navy-900 border border-navy-700 rounded-xl py-3 px-4 text-white text-base md:text-sm focus:outline-none focus:border-blue-accent cursor-pointer"
             >
               {YEARS.map((y) => (
                 <option key={y} value={y} className="bg-navy-900 text-white">

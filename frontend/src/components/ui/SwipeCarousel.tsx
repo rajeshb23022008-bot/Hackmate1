@@ -122,7 +122,7 @@ export const SwipeCarousel: React.FC<SwipeCarouselProps> = ({
       )}
 
       {/* Overflow container with draggable motion track */}
-      <div ref={containerRef} className="overflow-hidden cursor-grab active:cursor-grabbing w-full py-4 -my-4">
+      <div ref={containerRef} className="overflow-hidden touch-pan-y cursor-grab active:cursor-grabbing w-full py-4 -my-4">
         <motion.div
           ref={trackRef}
           drag="x"
