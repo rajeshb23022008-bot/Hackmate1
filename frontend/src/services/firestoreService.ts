@@ -47,16 +47,28 @@ export interface Team {
   updatedAt?: any;
 }
 
-// Helper to clean duplicate members in team objects
+const isTestMember = (name?: string, email?: string) => {
+  const n = (name || '').toLowerCase();
+  const e = (email || '').toLowerCase();
+  return (
+    n.includes('alpha leader') ||
+    n.includes('beta applicant') ||
+    n.includes('mahendra singh dhoni') ||
+    n.includes('dhoni') ||
+    e.includes('alpha') ||
+    e.includes('beta')
+  );
+};
+
+// Helper to clean duplicate & test members in team objects
 const sanitizeTeam = (team: Team): Team => {
   if (!team.members || !Array.isArray(team.members)) {
     return { ...team, members: [] };
   }
-  // Unique by UID
   const seen = new Set<string>();
   const uniqueMembers: TeamMember[] = [];
   for (const m of team.members) {
-    if (m && m.uid && !seen.has(m.uid)) {
+    if (m && m.uid && !seen.has(m.uid) && !isTestMember(m.name, m.email)) {
       seen.add(m.uid);
       uniqueMembers.push(m);
     }
@@ -95,9 +107,28 @@ export const getAllTeams = async (): Promise<Team[]> => {
   try {
     const q = query(collection(db, 'teams'));
     const snapshot = await getDocs(q);
-    const teams = snapshot.docs.map((d) => sanitizeTeam({ id: d.id, ...d.data() } as Team));
-    // Sort in memory by createdAt
-    return teams.sort((a, b) => {
+    const rawTeams = snapshot.docs.map((d) => sanitizeTeam({ id: d.id, ...d.data() } as Team));
+    
+    // Deduplicate by lowercased team name & filter out test seed teams
+    const seenNames = new Set<string>();
+    const uniqueTeams: Team[] = [];
+
+    for (const t of rawTeams) {
+      const nameKey = (t.name || '').trim().toLowerCase();
+      if (
+        !nameKey ||
+        seenNames.has(nameKey) ||
+        nameKey.includes('seed') ||
+        nameKey.includes('cyberknights') ||
+        nameKey.includes('neuralsquad')
+      ) {
+        continue;
+      }
+      seenNames.add(nameKey);
+      uniqueTeams.push(t);
+    }
+
+    return uniqueTeams.sort((a, b) => {
       const tA = a.createdAt?.toMillis?.() || 0;
       const tB = b.createdAt?.toMillis?.() || 0;
       return tB - tA;
@@ -380,18 +411,73 @@ export const leaveTeam = async (teamId: string, userUid: string, userName: strin
 export const purgeFakeData = async () => {
   try {
     const { deleteDoc } = await import('firebase/firestore');
-    // Fetch all teams
-    const teamsSnap = await getDocs(collection(db, 'teams'));
-    for (const d of teamsSnap.docs) {
-      const data = d.data();
-      // If team has fake names like CyberKnights, NeuralSquad, or contains dummy data
+    const fakeNames = ['alpha leader', 'beta applicant', 'mahendra singh dhoni', 'dhoni', 'demo team'];
+
+    // 1. Purge Fake / Test Users from `users` collection
+    const usersSnap = await getDocs(collection(db, 'users'));
+    for (const d of usersSnap.docs) {
+      const uData = d.data();
+      const name = (uData.displayName || uData.name || '').toLowerCase();
+      const email = (uData.email || '').toLowerCase();
       if (
-        data.name?.includes('CyberKnights') ||
-        data.name?.includes('NeuralSquad') ||
-        data.isSeed === true ||
-        data.name?.includes('Seed')
+        fakeNames.some((fn) => name.includes(fn)) ||
+        email.includes('alpha') ||
+        email.includes('beta') ||
+        email.includes('dhoni')
       ) {
         await deleteDoc(d.ref);
+      }
+    }
+
+    // 2. Purge Duplicate / Fake Teams & clean team members
+    const teamsSnap = await getDocs(collection(db, 'teams'));
+    const seenTeamNames = new Set<string>();
+
+    for (const d of teamsSnap.docs) {
+      const teamData = d.data();
+      const teamName = (teamData.name || '').trim();
+      const teamNameLower = teamName.toLowerCase();
+
+      // Delete seed / fake teams
+      if (
+        teamNameLower.includes('cyberknights') ||
+        teamNameLower.includes('neuralsquad') ||
+        teamData.isSeed === true ||
+        teamNameLower.includes('seed')
+      ) {
+        await deleteDoc(d.ref);
+        continue;
+      }
+
+      // Check for duplicate team names (e.g. multiple "Alpha Titans" teams)
+      if (seenTeamNames.has(teamNameLower)) {
+        await deleteDoc(d.ref); // delete duplicate team
+        continue;
+      }
+      seenTeamNames.add(teamNameLower);
+
+      // Clean members array inside valid team doc if it contains test members
+      if (teamData.members && Array.isArray(teamData.members)) {
+        const cleanedMembers = teamData.members.filter((m: any) => {
+          const mName = (m.name || m.displayName || '').toLowerCase();
+          const mEmail = (m.email || '').toLowerCase();
+          return !fakeNames.some((fn) => mName.includes(fn)) && !mEmail.includes('alpha') && !mEmail.includes('beta');
+        });
+
+        if (cleanedMembers.length !== teamData.members.length) {
+          await updateDoc(d.ref, { members: cleanedMembers, updatedAt: serverTimestamp() });
+        }
+      }
+    }
+
+    // 3. Purge Fake Requests
+    const reqsSnap = await getDocs(collection(db, 'requests'));
+    for (const r of reqsSnap.docs) {
+      const rData = r.data();
+      const sName = (rData.senderName || '').toLowerCase();
+      const rName = (rData.receiverName || '').toLowerCase();
+      if (fakeNames.some((fn) => sName.includes(fn) || rName.includes(fn))) {
+        await deleteDoc(r.ref);
       }
     }
   } catch (err) {
@@ -552,7 +638,9 @@ export const getTeammates = async (): Promise<UserProfile[]> => {
   try {
     const q = query(collection(db, 'users'));
     const snapshot = await getDocs(q);
-    const users = snapshot.docs.map((d) => ({ ...d.data(), uid: d.id } as UserProfile));
+    const users = snapshot.docs
+      .map((d) => ({ ...d.data(), uid: d.id } as UserProfile))
+      .filter((u) => !isTestMember(u.displayName || undefined, u.email || undefined));
     return users;
   } catch (err) {
     console.warn('Firestore getTeammates query failed, returning empty or fallback:', err);

@@ -14,7 +14,7 @@ import {
   Tag,
   Zap,
 } from 'lucide-react';
-import { getAllTeams, type Team } from '../../services/firestoreService';
+import { getAllTeams, purgeFakeData, type Team } from '../../services/firestoreService';
 import { useAuth } from '../../context/AuthContext';
 import CreateTeamModal from '../../components/team/CreateTeamModal';
 import ApplyTeamModal from '../../components/team/ApplyTeamModal';
@@ -46,6 +46,7 @@ export default function TeamsPage() {
 
   const fetchTeams = async () => {
     setLoading(true);
+    await purgeFakeData();
     const data = await getAllTeams();
     setTeams(data);
     setLoading(false);
