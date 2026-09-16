@@ -7,6 +7,7 @@ import {
   Users,
   Trophy,
   Bell,
+  MessageSquare,
   User,
   LogOut,
   Sparkles,
@@ -35,9 +36,10 @@ export default function AppLayout() {
 
   const navItems = [
     { name: 'Dashboard', path: '/app', icon: Home, mobile: true },
-    { name: 'Find Teammates', path: '/app/teammates', icon: Search, mobile: true },
-    { name: 'Find Teams', path: '/app/teams', icon: Users, mobile: true },
-    { name: 'My Team', path: '/app/my-team', icon: Trophy, mobile: true },
+    { name: 'Teammates', path: '/app/teammates', icon: Search, mobile: true },
+    { name: 'Teams', path: '/app/teams', icon: Users, mobile: true },
+    { name: 'My Team', path: '/app/my-team', icon: Trophy, mobile: false },
+    { name: 'Messages', path: '/app/messages', icon: MessageSquare, mobile: true },
     { name: 'Notifications', path: '/app/notifications', icon: Bell, mobile: true, badge: unreadCount },
     { name: 'Profile', path: '/app/profile', icon: User, mobile: false },
   ];

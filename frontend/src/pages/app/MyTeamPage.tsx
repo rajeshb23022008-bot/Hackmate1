@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { PageTransition } from '../../components/ui/PageTransition';
 import { MotionCard } from '../../components/ui/MotionCard';
 import { MotionButton } from '../../components/ui/MotionButton';
@@ -18,6 +19,7 @@ import {
   AlertTriangle,
   LogOut,
   Undo2,
+  MessageSquare,
 } from 'lucide-react';
 import {
   subscribeUserTeams,
@@ -302,7 +304,14 @@ export default function MyTeamPage() {
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <Link to={`/app/messages?chatId=${team.id}`}>
+                          <button className="py-1.5 px-3 bg-blue-accent/10 border border-blue-accent/30 text-blue-accent hover:bg-blue-accent hover:text-navy-950 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm">
+                            <MessageSquare className="w-3.5 h-3.5" />
+                            <span>Team Group Chat</span>
+                          </button>
+                        </Link>
+
                         <span className="text-xs font-mono font-bold px-3 py-1.5 rounded-lg bg-navy-900 border border-navy-700 text-white">
                           Roster: {members.length} / {team.maxSize || 6}
                         </span>

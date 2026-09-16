@@ -1,10 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { PageTransition } from '../../components/ui/PageTransition';
 import { MotionCard } from '../../components/ui/MotionCard';
 import { MotionButton } from '../../components/ui/MotionButton';
 import { AnimatedList, AnimatedListItem } from '../../components/ui/AnimatedList';
-import { Search, UserPlus } from 'lucide-react';
+import { Search, UserPlus, MessageSquare } from 'lucide-react';
 import {
   getTeammates,
   subscribeUserTeams,
@@ -13,12 +14,15 @@ import {
 import { useAuth, type UserProfile } from '../../context/AuthContext';
 import InviteTeammateModal from '../../components/team/InviteTeammateModal';
 
+
 const domains = ['All Domains', 'AI/ML', 'Web/Cloud', 'Design', 'Web3', 'Hardware'];
 const YEARS = ['All Years', '1st Year', '2nd Year', '3rd Year', '4th Year', 'Postgrad'];
 
 export default function TeammatesPage() {
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
   const [teammates, setTeammates] = useState<UserProfile[]>([]);
+
   const [userTeams, setUserTeams] = useState<Team[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDomain, setSelectedDomain] = useState('All Domains');
@@ -207,8 +211,15 @@ export default function TeammatesPage() {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-navy-700/60 flex items-center justify-between mt-auto">
-                  <span className="text-xs text-slate-400">Ready to join</span>
+                <div className="pt-4 border-t border-navy-700/60 flex items-center justify-between gap-2 mt-auto">
+                  <button
+                    onClick={() => navigate(`/app/messages?recipientId=${mate.uid}`)}
+                    className="py-1.5 px-3 bg-navy-900 border border-navy-700 hover:border-blue-accent/50 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5 text-blue-accent" />
+                    <span>Message</span>
+                  </button>
+
                   <MotionButton
                     size="sm"
                     onClick={() => setSelectedTeammateToInvite(mate)}

@@ -10,6 +10,7 @@ import TeammatesPage from './pages/app/TeammatesPage';
 import TeamsPage from './pages/app/TeamsPage';
 import MyTeamPage from './pages/app/MyTeamPage';
 import NotificationsPage from './pages/app/NotificationsPage';
+import MessagesPage from './pages/app/MessagesPage';
 import ProfilePage from './pages/app/ProfilePage';
 
 function AnimatedRoutes() {
@@ -30,7 +31,7 @@ function AnimatedRoutes() {
           <Route path="my-team" element={<MyTeamPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="hackathons" element={<TeamsPage />} />
-          <Route path="messages" element={<MyTeamPage />} />
+          <Route path="messages" element={<MessagesPage />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
 

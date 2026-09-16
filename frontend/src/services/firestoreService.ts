@@ -4,14 +4,17 @@ import {
   getDoc,
   getDocs,
   addDoc,
+  setDoc,
   updateDoc,
   query,
   where,
   onSnapshot,
   serverTimestamp,
 } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '../config/firebase';
 import type { UserProfile } from '../context/AuthContext';
+
 
 // ==========================================
 // 1. TEAM MODELS & OPERATIONS
@@ -564,4 +567,217 @@ export const updateUserProfile = async (uid: string, data: Partial<UserProfile>)
     updatedAt: serverTimestamp(),
   });
 };
+
+// ==========================================
+// 5. CHAT & MESSAGING OPERATIONS
+// ==========================================
+export interface ChatMessage {
+  id?: string;
+  chatId: string; // teamId or conversationId
+  senderId: string;
+  senderName: string;
+  senderAvatar?: string;
+  text: string;
+  type?: 'text' | 'voice' | 'file';
+  audioUrl?: string;
+  audioDuration?: number;
+  createdAt?: any;
+}
+
+export interface Conversation {
+  id: string; // composite e.g. userA_userB (sorted uids)
+  participants: string[];
+  participantData: {
+    [uid: string]: {
+      displayName: string;
+      email?: string;
+      role?: string;
+      avatarUrl?: string;
+    };
+  };
+  lastMessage?: {
+    text: string;
+    senderId: string;
+    type?: 'text' | 'voice' | 'file';
+    timestamp?: any;
+  };
+  updatedAt?: any;
+  createdAt?: any;
+}
+
+/**
+ * Get or create a 1-on-1 direct conversation document
+ */
+export const getOrCreateConversation = async (
+  currentUser: { uid: string; displayName?: string; email?: string; role?: string },
+  otherUser: { uid: string; displayName?: string; email?: string; role?: string }
+): Promise<string> => {
+  if (!currentUser?.uid || !otherUser?.uid) {
+    throw new Error('Both users must be valid to start a conversation');
+  }
+
+  const convId = [currentUser.uid, otherUser.uid].sort().join('_');
+  const convRef = doc(db, 'conversations', convId);
+  const snap = await getDoc(convRef);
+
+  if (!snap.exists()) {
+    await setDoc(convRef, {
+      participants: [currentUser.uid, otherUser.uid],
+      participantData: {
+        [currentUser.uid]: {
+          displayName: currentUser.displayName || 'Hacker',
+          email: currentUser.email || '',
+          role: currentUser.role || 'Member',
+        },
+        [otherUser.uid]: {
+          displayName: otherUser.displayName || 'Hacker',
+          email: otherUser.email || '',
+          role: otherUser.role || 'Member',
+        },
+      },
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+  }
+
+  return convId;
+};
+
+/**
+ * Real-time subscription to current user's direct conversations
+ */
+export const subscribeUserConversations = (
+  userId: string,
+  callback: (conversations: Conversation[]) => void
+) => {
+  try {
+    const q = query(
+      collection(db, 'conversations'),
+      where('participants', 'array-contains', userId)
+    );
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const convs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Conversation));
+        convs.sort((a, b) => {
+          const tA = a.updatedAt?.toMillis?.() || a.createdAt?.toMillis?.() || 0;
+          const tB = b.updatedAt?.toMillis?.() || b.createdAt?.toMillis?.() || 0;
+          return tB - tA;
+        });
+        callback(convs);
+      },
+      (err) => {
+        console.warn('Conversations subscription warning:', err);
+        callback([]);
+      }
+    );
+  } catch (err) {
+    console.warn('Error subscribing to conversations:', err);
+    callback([]);
+    return () => {};
+  }
+};
+
+/**
+ * Real-time subscription to messages for a specific team chat or DM conversation
+ */
+export const subscribeChatMessages = (
+  chatId: string,
+  callback: (messages: ChatMessage[]) => void
+) => {
+  if (!chatId) return () => {};
+  try {
+    const q = query(collection(db, 'messages'), where('chatId', '==', chatId));
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const msgs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as ChatMessage));
+        // Sort ascending by time for chat display
+        msgs.sort((a, b) => {
+          const tA = a.createdAt?.toMillis?.() || (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+          const tB = b.createdAt?.toMillis?.() || (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+          return tA - tB;
+        });
+        callback(msgs);
+      },
+      (err) => {
+        console.warn('Messages subscription warning:', err);
+        callback([]);
+      }
+    );
+  } catch (err) {
+    console.warn('Error subscribing to chat messages:', err);
+    callback([]);
+    return () => {};
+  }
+};
+
+/**
+ * Send a message (Text or Voice)
+ */
+export const sendChatMessage = async (
+  messageData: Omit<ChatMessage, 'id' | 'createdAt'>
+): Promise<string> => {
+  const msgsRef = collection(db, 'messages');
+  const docRef = await addDoc(msgsRef, {
+    ...messageData,
+    type: messageData.type || 'text',
+    createdAt: serverTimestamp(),
+  });
+
+  // If this is a DM conversation, update conversation's lastMessage
+  if (messageData.chatId.includes('_')) {
+    try {
+      const convRef = doc(db, 'conversations', messageData.chatId);
+      const convSnap = await getDoc(convRef);
+      if (convSnap.exists()) {
+        await updateDoc(convRef, {
+          lastMessage: {
+            text: messageData.type === 'voice' ? '🎤 Voice message' : messageData.text,
+            senderId: messageData.senderId,
+            type: messageData.type || 'text',
+            timestamp: new Date().toISOString(),
+          },
+          updatedAt: serverTimestamp(),
+        });
+      }
+    } catch (e) {
+      console.warn('Error updating conversation last message:', e);
+    }
+  }
+
+  return docRef.id;
+};
+
+/**
+ * Helper to convert Blob to Base64 Data URL (fallback if Storage bucket throws)
+ */
+const blobToBase64 = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
+
+/**
+ * Upload voice recording to Firebase Storage with seamless Base64 data URI fallback
+ */
+export const uploadVoiceRecording = async (audioBlob: Blob, chatId: string): Promise<string> => {
+  const filename = `voice_${Date.now()}.webm`;
+  const path = `chat_audio/${chatId}/${filename}`;
+  const audioRef = storageRef(storage, path);
+
+  try {
+    const snapshot = await uploadBytes(audioRef, audioBlob);
+    const downloadUrl = await getDownloadURL(snapshot.ref);
+    return downloadUrl;
+  } catch (err) {
+    console.warn('Firebase Storage upload failed or restricted. Using Data URI fallback:', err);
+    const dataUri = await blobToBase64(audioBlob);
+    return dataUri;
+  }
+};
+
 
