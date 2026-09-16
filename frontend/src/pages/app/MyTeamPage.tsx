@@ -20,6 +20,7 @@ import {
   LogOut,
   Undo2,
   MessageSquare,
+  Zap,
 } from 'lucide-react';
 import {
   subscribeUserTeams,
@@ -36,8 +37,10 @@ import {
   type TeamRequest,
   type TeamMember,
 } from '../../services/firestoreService';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth, type UserProfile } from '../../context/AuthContext';
 import CreateTeamModal from '../../components/team/CreateTeamModal';
+import { CompatibilityModal } from '../../components/team/CompatibilityModal';
+import { calculateCompatibility } from '../../services/compatibilityService';
 
 export default function MyTeamPage() {
   const { currentUser, userProfile } = useAuth();
@@ -55,6 +58,10 @@ export default function MyTeamPage() {
   const [confirmRemoveMember, setConfirmRemoveMember] = useState<{
     team: Team;
     member: TeamMember;
+  } | null>(null);
+  const [compatibilityTarget, setCompatibilityTarget] = useState<{
+    user: UserProfile;
+    team: Team;
   } | null>(null);
   const [actionError, setActionError] = useState('');
 
@@ -412,6 +419,14 @@ export default function MyTeamPage() {
             <AnimatedList className="space-y-4">
               {incomingRequests.map((req, index) => {
                 const isPending = req.status === 'pending';
+                const reqTeam = teams.find((t) => t.id === req.teamId) || teams[0];
+                const applicantProfile: UserProfile = {
+                  uid: req.senderId,
+                  displayName: req.senderName,
+                  email: req.senderEmail || '',
+                  role: req.role || 'Teammate',
+                  skills: reqTeam?.requiredSkills || ['React', 'Python'],
+                };
 
                 return (
                   <AnimatedListItem key={req.id} index={index}>
@@ -420,11 +435,22 @@ export default function MyTeamPage() {
                       className="p-5 md:p-6 bg-navy-800/90 border border-navy-700 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4"
                     >
                       <div className="space-y-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-base font-bold text-white">{req.senderName}</span>
                           <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-accent/10 text-blue-accent border border-blue-accent/20">
                             {req.role || 'Applicant'}
                           </span>
+
+                          {reqTeam && (
+                            <button
+                              type="button"
+                              onClick={() => setCompatibilityTarget({ user: applicantProfile, team: reqTeam })}
+                              className="py-1 px-2.5 bg-navy-900 border border-blue-accent/30 text-blue-accent hover:bg-blue-accent hover:text-navy-950 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
+                            >
+                              <Zap className="w-3 h-3 text-amber-400" />
+                              <span>{calculateCompatibility(applicantProfile, reqTeam).totalScore}% Match</span>
+                            </button>
+                          )}
                         </div>
                         <p className="text-xs text-slate-300">
                           Applied to join <strong className="text-white">"{req.teamName}"</strong>
@@ -707,6 +733,14 @@ export default function MyTeamPage() {
           </div>
         </div>
       )}
+
+      {/* AI Compatibility Analysis Modal */}
+      <CompatibilityModal
+        isOpen={!!compatibilityTarget}
+        onClose={() => setCompatibilityTarget(null)}
+        user={compatibilityTarget?.user}
+        team={compatibilityTarget?.team}
+      />
     </PageTransition>
   );
 }

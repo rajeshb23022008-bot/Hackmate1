@@ -5,7 +5,7 @@ import { PageTransition } from '../../components/ui/PageTransition';
 import { MotionCard } from '../../components/ui/MotionCard';
 import { MotionButton } from '../../components/ui/MotionButton';
 import { AnimatedList, AnimatedListItem } from '../../components/ui/AnimatedList';
-import { Search, UserPlus, MessageSquare } from 'lucide-react';
+import { Search, UserPlus, MessageSquare, Zap } from 'lucide-react';
 import {
   getTeammates,
   subscribeUserTeams,
@@ -13,6 +13,8 @@ import {
 } from '../../services/firestoreService';
 import { useAuth, type UserProfile } from '../../context/AuthContext';
 import InviteTeammateModal from '../../components/team/InviteTeammateModal';
+import { CompatibilityModal } from '../../components/team/CompatibilityModal';
+import { calculateCompatibility } from '../../services/compatibilityService';
 
 
 const domains = ['All Domains', 'AI/ML', 'Web/Cloud', 'Design', 'Web3', 'Hardware'];
@@ -30,6 +32,10 @@ export default function TeammatesPage() {
   const [deptFilter, setDeptFilter] = useState('');
   const [yearFilter, setYearFilter] = useState('All Years');
   const [selectedTeammateToInvite, setSelectedTeammateToInvite] = useState<UserProfile | null>(null);
+  const [compatibilityTarget, setCompatibilityTarget] = useState<{
+    user: UserProfile;
+    team: Team;
+  } | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -180,19 +186,31 @@ export default function TeammatesPage() {
                 className="p-6 h-full flex flex-col justify-between border-navy-700/80 hover:border-blue-accent/40 shadow-lg bg-navy-800/90"
               >
                 <div>
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-blue-accent to-blue-600 flex items-center justify-center text-navy-900 font-bold text-base shadow-sm">
+                  <div className="flex items-start justify-between mb-4 gap-2">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-blue-accent to-blue-600 flex items-center justify-center text-navy-900 font-bold text-base shadow-sm shrink-0">
                         {(mate.displayName || 'H').charAt(0).toUpperCase()}
                       </div>
-                      <div>
-                        <h3 className="font-bold text-white text-base leading-snug">
+                      <div className="min-w-0">
+                        <h3 className="font-bold text-white text-base leading-snug truncate">
                           {mate.displayName || 'Hacker'}
                         </h3>
-                        <p className="text-xs text-blue-accent font-medium">{mate.role || 'Developer'}</p>
-                        <p className="text-[11px] text-slate-400">{mate.college || 'Collegiate'}</p>
+                        <p className="text-xs text-blue-accent font-medium truncate">{mate.role || 'Developer'}</p>
+                        <p className="text-[11px] text-slate-400 truncate">{mate.college || 'Collegiate'}</p>
                       </div>
                     </div>
+
+                    {userTeams.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setCompatibilityTarget({ user: mate, team: userTeams[0] })}
+                        className="px-2.5 py-1 rounded-full bg-navy-900 border border-blue-accent/40 text-blue-accent hover:bg-blue-accent hover:text-navy-950 text-xs font-extrabold transition-all flex items-center gap-1 cursor-pointer shadow-sm shrink-0"
+                        title="Click to view AI compatibility breakdown"
+                      >
+                        <Zap className="w-3 h-3 text-amber-400 fill-current" />
+                        <span>{calculateCompatibility(mate, userTeams[0]).totalScore}% Match</span>
+                      </button>
+                    )}
                   </div>
 
                   <p className="text-xs text-slate-300 leading-relaxed mb-4">
@@ -248,6 +266,24 @@ export default function TeammatesPage() {
         teammate={selectedTeammateToInvite}
         userTeams={userTeams}
         onClose={() => setSelectedTeammateToInvite(null)}
+      />
+
+      {/* AI Compatibility Analysis Modal */}
+      <CompatibilityModal
+        isOpen={!!compatibilityTarget}
+        onClose={() => setCompatibilityTarget(null)}
+        user={compatibilityTarget?.user}
+        team={compatibilityTarget?.team}
+        onInvite={() => {
+          if (compatibilityTarget?.user) {
+            setSelectedTeammateToInvite(compatibilityTarget.user);
+          }
+        }}
+        onMessage={() => {
+          if (compatibilityTarget?.user) {
+            navigate(`/app/messages?recipientId=${compatibilityTarget.user.uid}`);
+          }
+        }}
       />
     </PageTransition>
   );

@@ -12,11 +12,14 @@ import {
   Send,
   CheckCircle2,
   Tag,
+  Zap,
 } from 'lucide-react';
 import { getAllTeams, type Team } from '../../services/firestoreService';
 import { useAuth } from '../../context/AuthContext';
 import CreateTeamModal from '../../components/team/CreateTeamModal';
 import ApplyTeamModal from '../../components/team/ApplyTeamModal';
+import { CompatibilityModal } from '../../components/team/CompatibilityModal';
+import { calculateCompatibility } from '../../services/compatibilityService';
 
 const EVENT_TYPES = [
   'All Events',
@@ -29,7 +32,7 @@ const EVENT_TYPES = [
 ];
 
 export default function TeamsPage() {
-  const { currentUser } = useAuth();
+  const { currentUser, userProfile } = useAuth();
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,6 +42,7 @@ export default function TeamsPage() {
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedApplyTeam, setSelectedApplyTeam] = useState<Team | null>(null);
+  const [selectedCompatibilityTeam, setSelectedCompatibilityTeam] = useState<Team | null>(null);
 
   const fetchTeams = async () => {
     setLoading(true);
@@ -181,6 +185,7 @@ export default function TeamsPage() {
             const isMember = team.members?.some((m) => m.uid === currentUser?.uid);
             const memberCount = team.members?.length || 1;
             const isFull = memberCount >= (team.maxSize || 6);
+            const compat = calculateCompatibility(userProfile, team);
 
             return (
               <AnimatedListItem key={team.id} index={index}>
@@ -188,19 +193,27 @@ export default function TeamsPage() {
                   <div>
                     {/* Top Header */}
                     <div className="flex items-start justify-between gap-2 mb-3">
-                      <div>
-                        <h3 className="font-bold text-white text-lg leading-snug">{team.name}</h3>
+                      <div className="min-w-0">
+                        <h3 className="font-bold text-white text-lg leading-snug truncate">{team.name}</h3>
                         <p className="text-xs text-blue-accent font-medium flex items-center gap-1.5 mt-0.5">
                           <Trophy className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                           <span className="truncate">{team.hackathon}</span>
                         </p>
                       </div>
-                      <div className="flex flex-col items-end shrink-0">
-                        <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-navy-900 border border-navy-700 text-slate-300">
-                          {memberCount} / {team.maxSize || 6}
-                        </span>
-                        <span className="text-[9px] text-slate-400 uppercase tracking-widest mt-0.5">
-                          members
+
+                      <div className="flex flex-col items-end shrink-0 gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedCompatibilityTeam(team)}
+                          className="px-2.5 py-1 rounded-full bg-navy-900 border border-blue-accent/40 text-blue-accent hover:bg-blue-accent hover:text-navy-950 text-xs font-extrabold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
+                          title="Click to view AI compatibility analysis"
+                        >
+                          <Zap className="w-3 h-3 text-amber-400 fill-current" />
+                          <span>{compat.totalScore}% Fit</span>
+                        </button>
+
+                        <span className="text-[10px] font-mono text-slate-400">
+                          {memberCount} / {team.maxSize || 6} members
                         </span>
                       </div>
                     </div>
@@ -298,6 +311,19 @@ export default function TeamsPage() {
         team={selectedApplyTeam}
         onClose={() => setSelectedApplyTeam(null)}
         onSuccess={() => fetchTeams()}
+      />
+
+      {/* AI Compatibility Analysis Modal */}
+      <CompatibilityModal
+        isOpen={!!selectedCompatibilityTeam}
+        onClose={() => setSelectedCompatibilityTeam(null)}
+        user={userProfile}
+        team={selectedCompatibilityTeam}
+        onInvite={() => {
+          if (selectedCompatibilityTeam) {
+            setSelectedApplyTeam(selectedCompatibilityTeam);
+          }
+        }}
       />
     </PageTransition>
   );
